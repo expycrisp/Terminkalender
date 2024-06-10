@@ -18,7 +18,7 @@ config = {
     'host': '127.0.0.1',
     'port': 3306,
     'user': 'root',
-    'password': '#y_root_pw',
+    'password': 'my_root_pw',
     'database': 'Termine'
 }
 
