@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termine</title>
+  <style>
+    .back{
+      position: absolute;
+      top: 400px;
+      left: 300px;
+  }
+  .delete{
+    position: absolute;
+    top: 300px;
+}
+  </style>
+  
+</head>
+<body>
+  <h2>Aktuelle Termine für diesen Tag</h2>
+  <table>
+    <thead>
+      <tr>        
+        {% for header in headers %}
+        <th>{{ header }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        {% for item in row.values() %}
+          {% if item is integer %}
+            <td>
+              <button id="{{ item }}" onclick="raus(this)">Löschen</button>
+            </td>
+          {% else %}
+           <td>{{ item }}</td> 
+          {% endif %}
+        {% endfor %}      
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+<form id="addForm">
+  <div id="test">  
+    <input type="hidden" name="date" id="dateinput" value="{{ date }}">
+    <input type="text" name="name" id="nameinput" placeholder="Name" required>
+    <input type="time" name="time" id="timeinput" class="time" placeholder="Uhrzeit" required> 
+    <input type="submit" id="addbtn" value="Hinzufügen">
+  </div>  
+</form> 
+
+
+
+<script>
+  
+  
+  function raus(button) {
+    const id = button.id;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/delete', true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.send(JSON.stringify({ id: id }));
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          if (response.success) {
+            // ??
+              const row = button.parentNode.parentNode;
+              row.parentNode.removeChild(row); // Entferne die Zeile aus der Tabelle
+          } else {
+              alert('Fehler beim Löschen des Eintrags');
+          }
+      }
+  };
+  xhr.send(JSON.stringify({ id: id }));
+
+
+
+
+}
+
+
+
+    document.getElementById('addForm').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+
+    const date = document.getElementById('dateinput').value;
+    const name = document.getElementById('nameinput').value;
+    const time = document.getElementById('timeinput').value;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/adding', true);
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        if (response.success) {
+
+          
+          const tbody = document.querySelector('tbody');
+          const row = tbody.insertRow();
+          row.setAttribute('data-id', response.id); // Setze die ID der neuen Zeile
+          
+          // Füge neue Einträge hinzu
+          row.insertCell(0).innerText = name;
+          row.insertCell(1).innerText = date;
+          row.insertCell(2).innerText = time;
+
+
+          // Generiere Löschen-Button
+          const deleteCell = row.insertCell(3); // wtf
+          const deleteButton = document.createElement('button');
+
+          // Definiere Attribute des Löschen-Buttons
+          deleteButton.innerText = 'Löschen';
+          deleteButton.setAttribute('type', 'button');
+          deleteButton.setAttribute('id', response.id); // Setze die ID des Buttons
+          deleteButton.setAttribute('onclick', 'raus(this)');
+          deleteCell.appendChild(deleteButton); // Fügt den deleteButton in die Zelle ein 
+        } 
+      }
+    };
+    xhr.send(JSON.stringify({ date: date, name: name, time: time }));
+  });    
+</script>
+
+
+
+
+<div class="back">
+  <form action="/">
+    <input type="submit" value="Zurück">
+  </form>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
